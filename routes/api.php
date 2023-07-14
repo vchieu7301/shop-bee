@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,10 +17,19 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+//Admin
+Route::group(['prefix' => 'admin'], function () {
+    Route::post('login', [AuthController::class, 'login'])->name('admin-login');
+    Route::group(["middleware" => ["isAdmin", "auth:sanctum", "cors"]], function () {
+        Route::resource('users', UserController::class)->only('index', 'store', 'show', 'update', 'destroy');
+        Route::post('logout', [AuthController::class, 'logout'])->name("logout");
+    });
 });
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+//Common
+Route::post('login', [AuthController::class, 'login'])->name('login');
+Route::post('register', [AuthController::class, 'register'])->name('register');
+Route::get('unauthenticated', [AuthController::class, 'unauthenticated'])->name('unauthenticated');
+Route::group(["middleware" => ["auth:sanctum", "cors"]], function () {
+    Route::post('logout', [AuthController::class, 'logout'])->name("logout");
 });

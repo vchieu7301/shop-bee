@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Customer;
+use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -30,11 +30,11 @@ class AuthController extends Controller
             ]);
         }
         try{
-            $customer = new Customer();
-            $customer->name = $params['name'];
-            $customer->password = bcrypt($params['password']);
-            $customer->email = $params['email'];
-            $customer->save();
+            $user = new User();
+            $user->name = $params['name'];
+            $user->password = bcrypt($params['password']);
+            $user->email = $params['email'];
+            $user->save();
             return response()->json([
                 'error' => false,
                 'message' => 'Successfull',
@@ -44,7 +44,7 @@ class AuthController extends Controller
             return response()->json([
                 'error' => true,
                 'code'=> Response::HTTP_BAD_REQUEST,
-                'message' => 'Add customer fail',
+                'message' => 'Add user fail',
             ]);
         }
     }

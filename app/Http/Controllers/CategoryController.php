@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Models\Category;
+use App\Models\Product;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -10,19 +11,19 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
-class UserController extends Controller
+class CategoryController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $records = User::whereNull('deleted_at')->get();
+        $records = Category::whereNull('deleted_at')->get();
         if(empty($records)){
             return response()->json([
                 'error' => 'true',
                 'code' => Response::HTTP_BAD_REQUEST,
-                'message' => 'Can find user'
+                'message' => 'Can find product'
             ]);
         }else{
             return response()->json([
@@ -39,11 +40,9 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $params = $request->input();
-       $validator = Validator::make($request->input(), [
-        'name' => 'required',
-        'password' => 'required',
-        'email' => 'required',
-        'role_id' => 'required'
+        $validator = Validator::make($request->input(), [
+            'category_name' => 'required',
+            'description' => 'nullable',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -53,12 +52,10 @@ class UserController extends Controller
             ]);
         }
         try{
-            $user = new User();
-            $user->name = $params['name'];
-            $user->password = md5($params['password']);
-            $user->email = $params['email'];
-            $user->role_id = $params['role_id'];
-            $user->save();
+            $category = new Category();
+            $category->category_name = $params['category_name'];
+            $category->description = $params['description'];
+            $category->save();
             return response()->json([
                 'error' => false,
                 'message' => 'Successfull',
@@ -78,12 +75,12 @@ class UserController extends Controller
      */
     public function show(string $id)
     {
-        $records = User::where('id', $id)->whereNull('deleted_at')->first();
+        $records = Category::where('id', $id)->whereNull('deleted_at')->first();
         if(empty($records)){
             return response()->json([
                 'error' => true,
                 'code' => Response::HTTP_BAD_REQUEST,
-                'message' => 'Can find user'
+                'message' => 'Can find record'
             ]);
         }else{
             return response()->json([
@@ -101,8 +98,8 @@ class UserController extends Controller
     {
         $params = $request->input();
         $validator = Validator::make($request->input(), [
-         'name' => 'required',
-         'email' => 'required'
+            'category_name' => 'required',
+            'description' => 'nullable',
          ]);
          if ($validator->fails()) {
              return response()->json([
@@ -112,10 +109,10 @@ class UserController extends Controller
              ]);
          }
          try{
-             $user = User::where('id', $id)->whereNull('deleted_at')->first();
-             $user->name = $params['name'];
-             $user->email = $params['email'];
-             $user->save();
+             $category = Category::where('id', $id)->whereNull('deleted_at')->first();
+             $category->category_name = $params['category_name'];
+             $category->description = $params['description'];
+             $category->save();
              return response()->json([
                  'error' => false,
                  'message' => 'Successfull',
@@ -133,23 +130,32 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, string $id)
+    public function destroy(string $id)
     {
-         try{
-             $user = User::where('id', $id)->whereNull('deleted_at')->first();
-             $user->deleted_at = Carbon::now();
-             $user->save();
-             return response()->json([
-                 'error' => false,
-                 'message' => 'Successfull',
-             ]);
-         }catch(Exception $e){
-             Log::info($e);
-             return response()->json([
-                 'error' => true,
-                 'code'=> Response::HTTP_BAD_REQUEST,
-                 'message' => 'Delete fail',
-             ]);
-         }
+        try{
+            $category = Category::where('id', $id)->whereNull('deleted_at')->first();
+            $product = Product::where('category_id', $category->id)->whereNull('deleted_at')->first();
+            if($product !== NULL){
+                return response()->json([
+                    'error' => true,
+                    'code'=> Response::HTTP_BAD_REQUEST,
+                    'message' => 'Some products are using this Category',
+                ]);
+            }else{
+                $category->deleted_at = Carbon::now();
+                $category->save();
+                return response()->json([
+                    'error' => false,
+                    'message' => 'Successfull',
+                ]);
+            }
+        }catch(Exception $e){
+            Log::info($e);
+            return response()->json([
+                'error' => true,
+                'code'=> Response::HTTP_BAD_REQUEST,
+                'message' => 'Delete fail',
+            ]);
+        }
     }
 }

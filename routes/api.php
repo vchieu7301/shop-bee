@@ -1,7 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,8 @@ Route::group(['prefix' => 'admin'], function () {
     Route::post('login', [AuthController::class, 'login'])->name('admin-login');
     Route::group(["middleware" => ["isAdmin", "auth:sanctum", "cors"]], function () {
         Route::resource('users', UserController::class)->only('index', 'store', 'show', 'update', 'destroy');
+        Route::resource('categories', CategoryController::class)->only('index', 'store', 'show', 'update', 'destroy');
+        Route::resource('products', ProductController::class)->only('index', 'store', 'show', 'update', 'destroy');
         Route::post('logout', [AuthController::class, 'logout'])->name("logout");
     });
 });

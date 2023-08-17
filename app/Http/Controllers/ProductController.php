@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Models\Product;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -10,19 +10,19 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
-class UserController extends Controller
+class ProductController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $records = User::whereNull('deleted_at')->get();
+        $records = Product::whereNull('deleted_at')->get();
         if(empty($records)){
             return response()->json([
                 'error' => 'true',
                 'code' => Response::HTTP_BAD_REQUEST,
-                'message' => 'Can find user'
+                'message' => 'Can find product'
             ]);
         }else{
             return response()->json([
@@ -39,11 +39,12 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $params = $request->input();
-       $validator = Validator::make($request->input(), [
-        'name' => 'required',
-        'password' => 'required',
-        'email' => 'required',
-        'role_id' => 'required'
+        $validator = Validator::make($request->input(), [
+            'product_name' => 'required',
+            'price' => 'required',
+            'category_id' => 'required',
+            'product_description' => 'nullable',
+            'images' => 'nullable'
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -53,12 +54,13 @@ class UserController extends Controller
             ]);
         }
         try{
-            $user = new User();
-            $user->name = $params['name'];
-            $user->password = md5($params['password']);
-            $user->email = $params['email'];
-            $user->role_id = $params['role_id'];
-            $user->save();
+            $product = new Product();
+            $product->product_name = $params['product_name'];
+            $product->price = $params['price'];
+            $product->product_description = $params['product_description'];
+            $product->images = $params['images'];
+            $product->category_id = $params['category_id'];
+            $product->save();
             return response()->json([
                 'error' => false,
                 'message' => 'Successfull',
@@ -78,12 +80,12 @@ class UserController extends Controller
      */
     public function show(string $id)
     {
-        $records = User::where('id', $id)->whereNull('deleted_at')->first();
+        $records = Product::where('id', $id)->whereNull('deleted_at')->first();
         if(empty($records)){
             return response()->json([
                 'error' => true,
                 'code' => Response::HTTP_BAD_REQUEST,
-                'message' => 'Can find user'
+                'message' => 'Can find record'
             ]);
         }else{
             return response()->json([
@@ -101,8 +103,11 @@ class UserController extends Controller
     {
         $params = $request->input();
         $validator = Validator::make($request->input(), [
-         'name' => 'required',
-         'email' => 'required'
+            'product_name' => 'required',
+            'price' => 'required',
+            'category_id' => 'required',
+            'product_description' => 'nullable',
+            'images' => 'nullable'
          ]);
          if ($validator->fails()) {
              return response()->json([
@@ -112,10 +117,13 @@ class UserController extends Controller
              ]);
          }
          try{
-             $user = User::where('id', $id)->whereNull('deleted_at')->first();
-             $user->name = $params['name'];
-             $user->email = $params['email'];
-             $user->save();
+             $product = Product::where('id', $id)->whereNull('deleted_at')->first();
+             $product->product_name = $params['product_name'];
+             $product->price = $params['price'];
+             $product->product_description = $params['product_description'];
+             $product->images = $params['images'];
+             $product->category_id = $params['category_id'];
+             $product->save();
              return response()->json([
                  'error' => false,
                  'message' => 'Successfull',
@@ -133,23 +141,23 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, string $id)
+    public function destroy(string $id)
     {
-         try{
-             $user = User::where('id', $id)->whereNull('deleted_at')->first();
-             $user->deleted_at = Carbon::now();
-             $user->save();
-             return response()->json([
-                 'error' => false,
-                 'message' => 'Successfull',
-             ]);
-         }catch(Exception $e){
-             Log::info($e);
-             return response()->json([
-                 'error' => true,
-                 'code'=> Response::HTTP_BAD_REQUEST,
-                 'message' => 'Delete fail',
-             ]);
-         }
+        try{
+            $product = Product::where('id', $id)->whereNull('deleted_at')->first();
+            $product->deleted_at = Carbon::now();
+            $product->save();
+            return response()->json([
+                'error' => false,
+                'message' => 'Successfull',
+            ]);
+        }catch(Exception $e){
+            Log::info($e);
+            return response()->json([
+                'error' => true,
+                'code'=> Response::HTTP_BAD_REQUEST,
+                'message' => 'Delete fail',
+            ]);
+        }
     }
 }

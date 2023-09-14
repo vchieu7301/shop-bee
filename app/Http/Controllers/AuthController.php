@@ -74,6 +74,12 @@ class AuthController extends Controller
         return response()->json(['error' => true,'code' => Response::HTTP_UNAUTHORIZED, 'message' => 'Unauthenticated']);
     }
 
+    public function signOut(Request $request)
+    {
+        $request->user()->tokens()->delete();
+        return response()->json(['message' => 'Successfully logged out'], 200);
+    }
+
     /**
      * Display a listing of the resource.
      */

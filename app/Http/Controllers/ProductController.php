@@ -22,7 +22,7 @@ class ProductController extends Controller
             return response()->json([
                 'error' => 'true',
                 'code' => Response::HTTP_BAD_REQUEST,
-                'message' => 'Can find product'
+                'message' => 'Can find Record'
             ]);
         }else{
             return response()->json([
@@ -159,5 +159,23 @@ class ProductController extends Controller
                 'message' => 'Delete fail',
             ]);
         }
+    }
+
+    public function dashboardProducts()
+    {
+        $records = Product::where('quantity', '>', 0)->whereNull('deleted_at')->get();
+        if(empty($records)){
+            return response()->json([
+                'error' => 'true',
+                'code' => Response::HTTP_BAD_REQUEST,
+                'message' => 'Can find Record'
+            ]);
+        }else{
+            return response()->json([
+                'error' => 'false',
+                'code' => Response::HTTP_OK,
+                'result' => $records
+            ]);
+        }   
     }
 }

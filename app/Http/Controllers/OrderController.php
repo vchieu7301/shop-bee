@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\User;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -20,19 +21,35 @@ class OrderController extends Controller
     public function index()
     {
         $records = Order::whereNull('deleted_at')->get();
-        if(empty($records)){
+        if (empty($records)) {
             return response()->json([
                 'error' => 'true',
                 'code' => Response::HTTP_BAD_REQUEST,
                 'message' => 'Can find Record'
             ]);
-        }else{
+        } else {
+            foreach ($records as $record) {
+                $details = [];
+                $order_items = OrderItem::where('order_id', $record->id)->get();
+                foreach ($order_items as $item) {
+                    $details[] = [
+                        'quantity' => $item->quantity,
+                        'subtotal' => $item->subtotal,
+                    ];
+                }
+                $user = User::where('id', $record->user_id)->first();
+                $recordsDetails[] = [
+                    'order' => $record,
+                    'user' => $user->name,
+                    'details' => $details,
+                ];
+            }
             return response()->json([
-                'error' => 'false',
+                'error' => false,
                 'code' => Response::HTTP_OK,
-                'result' => $records
+                'result' => $recordsDetails,
             ]);
-        }   
+        }
     }
 
     /**
@@ -40,12 +57,12 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
-        $user_id = $request->user()->id;
+        $user = $request->user();
         $params = $request->input();
         $validator = Validator::make($request->input(), [
-            'status'=> 'required',
-            'payment_method'=> 'required',
-            'shipping_address'=> 'required',
+            'status' => 'required',
+            'payment_method' => 'required',
+            'shipping_address' => 'required',
             'coupon_code' => 'nullable',
             'shipping_fee' => 'nullable',
             'order_items' => 'required|array',
@@ -53,13 +70,13 @@ class OrderController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'error' => true,
-                'code'=> Response::HTTP_BAD_REQUEST,
+                'code' => Response::HTTP_BAD_REQUEST,
                 'mesage' => $validator->errors()
             ]);
         }
-        try{
+        try {
             $order = new Order();
-            $order->user_id = $user_id;
+            $order->user_id = $user->id;
             $order->order_date = Carbon::now();
             $order->status = $params['status'];
             $order->payment_method = $params['payment_method'];
@@ -81,11 +98,12 @@ class OrderController extends Controller
                 'error' => false,
                 'message' => 'Successfull',
             ]);
-        }catch(Exception $e){
+        } catch (Exception $e) {
             Log::info($e);
+            print_r($e->getMessage());
             return response()->json([
                 'error' => true,
-                'code'=> Response::HTTP_BAD_REQUEST,
+                'code' => Response::HTTP_BAD_REQUEST,
                 'message' => 'Add fail',
             ]);
         }
@@ -97,13 +115,13 @@ class OrderController extends Controller
     public function show(string $id)
     {
         $records = Order::where('id', $id)->whereNull('deleted_at')->first();
-        if(empty($records)){
+        if (empty($records)) {
             return response()->json([
                 'error' => true,
                 'code' => Response::HTTP_BAD_REQUEST,
                 'message' => 'Can find record'
             ]);
-        }else{
+        } else {
             return response()->json([
                 'error' => false,
                 'code' => Response::HTTP_OK,
@@ -119,21 +137,21 @@ class OrderController extends Controller
     {
         $params = $request->input();
         $validator = Validator::make($request->input(), [
-            'status'=> 'required',
-            'payment_method'=> 'required',
-            'shipping_address'=> 'required',
+            'status' => 'required',
+            'payment_method' => 'required',
+            'shipping_address' => 'required',
             'coupon_code' => 'nullable',
             'shipping_fee' => 'nullable',
-            'tax_amount'=> 'required'
+            'tax_amount' => 'required'
         ]);
         if ($validator->fails()) {
             return response()->json([
                 'error' => true,
-                'code'=> Response::HTTP_BAD_REQUEST,
+                'code' => Response::HTTP_BAD_REQUEST,
                 'mesage' => $validator->errors()
             ]);
         }
-        try{
+        try {
             $order = new Order();
             $order->order_date = Carbon::now();
             $order->status = $params['status'];
@@ -146,11 +164,11 @@ class OrderController extends Controller
                 'error' => false,
                 'message' => 'Successfull',
             ]);
-        }catch(Exception $e){
+        } catch (Exception $e) {
             Log::info($e);
             return response()->json([
                 'error' => true,
-                'code'=> Response::HTTP_BAD_REQUEST,
+                'code' => Response::HTTP_BAD_REQUEST,
                 'message' => 'Update fail',
             ]);
         }
@@ -161,7 +179,7 @@ class OrderController extends Controller
      */
     public function destroy(string $id)
     {
-        try{
+        try {
             $order = Order::where('id', $id)->whereNull('deleted_at')->first();
             $order->deleted_at = Carbon::now();
             $order->save();
@@ -169,11 +187,11 @@ class OrderController extends Controller
                 'error' => false,
                 'message' => 'Successfull',
             ]);
-        }catch(Exception $e){
+        } catch (Exception $e) {
             Log::info($e);
             return response()->json([
                 'error' => true,
-                'code'=> Response::HTTP_BAD_REQUEST,
+                'code' => Response::HTTP_BAD_REQUEST,
                 'message' => 'Delete fail',
             ]);
         }
@@ -184,8 +202,8 @@ class OrderController extends Controller
         $user_id = $request->user()->id;
         $params = $request->input();
         $validator = Validator::make($request->input(), [
-            'payment_method'=> 'required',
-            'shipping_address'=> 'required',
+            'payment_method' => 'required',
+            'shipping_address' => 'required',
             'coupon_code' => 'nullable',
             'shipping_fee' => 'nullable',
             'order_items' => 'required|array',
@@ -193,11 +211,11 @@ class OrderController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'error' => true,
-                'code'=> Response::HTTP_BAD_REQUEST,
+                'code' => Response::HTTP_BAD_REQUEST,
                 'mesage' => $validator->errors()
             ]);
         }
-        try{
+        try {
             $order = new Order();
             $order->user_id = $user_id;
             $order->order_date = Carbon::now();
@@ -221,11 +239,12 @@ class OrderController extends Controller
                 'error' => false,
                 'message' => 'Successfull',
             ]);
-        }catch(Exception $e){
+        } catch (Exception $e) {
             Log::info($e);
+            print_r($e->getMessage());
             return response()->json([
                 'error' => true,
-                'code'=> Response::HTTP_BAD_REQUEST,
+                'code' => Response::HTTP_BAD_REQUEST,
                 'message' => 'Add fail',
             ]);
         }
@@ -233,7 +252,7 @@ class OrderController extends Controller
 
     public function cancelOrder(string $id)
     {
-        try{
+        try {
             $order = Order::where('id', $id)->whereNull('deleted_at')->first();
             $order->status = 'Cancelled';
             $order->deleted_at = Carbon::now();
@@ -242,11 +261,11 @@ class OrderController extends Controller
                 'error' => false,
                 'message' => 'Successfull',
             ]);
-        }catch(Exception $e){
+        } catch (Exception $e) {
             Log::info($e);
             return response()->json([
                 'error' => true,
-                'code'=> Response::HTTP_BAD_REQUEST,
+                'code' => Response::HTTP_BAD_REQUEST,
                 'message' => 'An error occurred while canceling the order',
             ]);
         }

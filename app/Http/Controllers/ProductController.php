@@ -43,6 +43,7 @@ class ProductController extends Controller
             'product_name' => 'required',
             'price' => 'required',
             'category_id' => 'required',
+            'quantily' => 'required',
             'product_description' => 'nullable',
             'images' => 'nullable'
         ]);
@@ -60,6 +61,7 @@ class ProductController extends Controller
             $product->product_description = $params['product_description'];
             $product->images = $params['images'];
             $product->category_id = $params['category_id'];
+            $product->quantity = $params['quantily'];
             $product->save();
             return response()->json([
                 'error' => false,

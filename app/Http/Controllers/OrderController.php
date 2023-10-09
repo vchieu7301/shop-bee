@@ -21,7 +21,7 @@ class OrderController extends Controller
     public function index()
     {
         $records = Order::whereNull('deleted_at')->get();
-        if (empty($records)) {
+        if ($records->isEmpty()) {
             return response()->json([
                 'error' => 'true',
                 'code' => Response::HTTP_BAD_REQUEST,
@@ -33,6 +33,7 @@ class OrderController extends Controller
                 $order_items = OrderItem::where('order_id', $record->id)->get();
                 foreach ($order_items as $item) {
                     $details[] = [
+                        'product_id'=> $item->product_id,
                         'quantity' => $item->quantity,
                         'subtotal' => $item->subtotal,
                     ];
@@ -100,7 +101,6 @@ class OrderController extends Controller
             ]);
         } catch (Exception $e) {
             Log::info($e);
-            print_r($e->getMessage());
             return response()->json([
                 'error' => true,
                 'code' => Response::HTTP_BAD_REQUEST,
@@ -142,7 +142,7 @@ class OrderController extends Controller
             'shipping_address' => 'required',
             'coupon_code' => 'nullable',
             'shipping_fee' => 'nullable',
-            'tax_amount' => 'required'
+            'order_items' => 'required|array',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -152,20 +152,29 @@ class OrderController extends Controller
             ]);
         }
         try {
-            $order = new Order();
-            $order->order_date = Carbon::now();
+            $order = Order::where('id', $id)->whereNull('deleted_at')->first();
             $order->status = $params['status'];
             $order->payment_method = $params['payment_method'];
             $order->shipping_address = $params['shipping_address'];
             $order->coupon_code = $params['coupon_code'];
             $order->shipping_fee = $params['shipping_fee'];
             $order->save();
+            foreach ($request->order_items as $itemData) {
+                $product = Product::where('id', $itemData['product_id'])->first();
+                $totalPrice = $product->price * $itemData['quantity'];
+                $orderItem = OrderItem::where('order_id', $id)->whereNull('deleted_at')->first();
+                $orderItem->product_id = $product->id;
+                $orderItem->quantity = $itemData['quantity'];
+                $orderItem->subtotal = $totalPrice;
+                $orderItem->save();
+            }
             return response()->json([
                 'error' => false,
                 'message' => 'Successfull',
             ]);
         } catch (Exception $e) {
             Log::info($e);
+
             return response()->json([
                 'error' => true,
                 'code' => Response::HTTP_BAD_REQUEST,
@@ -180,8 +189,10 @@ class OrderController extends Controller
     public function destroy(string $id)
     {
         try {
-            $order = Order::where('id', $id)->whereNull('deleted_at')->first();
+            $order = Order::find($id);    
+            $orderItem = OrderItem::where('order_id', $order->id)->whereNull('deleted_at')->first();
             $order->deleted_at = Carbon::now();
+            $orderItem->deleted_at = Carbon::now();
             $order->save();
             return response()->json([
                 'error' => false,

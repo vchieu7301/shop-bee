@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
@@ -17,17 +18,19 @@ class UserController extends Controller
      */
     public function index()
     {
-        $records = User::whereNull('deleted_at')->get();
-        if(empty($records)){
+        $records = User::leftJoin('roles', 'users.role_id', '=', 'roles.role_id')->whereNull('users.deleted_at')->select('users.*', 'roles.role_name')->get();
+        if($records->isEmpty()){
             return response()->json([
                 'error' => 'true',
                 'code' => Response::HTTP_BAD_REQUEST,
                 'message' => 'Can find user'
             ]);
         }else{
+            $roles = Role::whereNull('deleted_at')->get();
             return response()->json([
                 'error' => 'false',
                 'code' => Response::HTTP_OK,
+                'roles'=> $roles,
                 'result' => $records
             ]);
         }   

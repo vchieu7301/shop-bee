@@ -56,10 +56,15 @@ class AuthController extends Controller
         ]);
 
         if (Auth::attempt($credentials)) {
+            $user = $request->user();
             $tokenName = 'Personal Access Token';
             $token = $request->user()->createToken($tokenName);
             return response()->json([
-                'token' => $token->plainTextToken
+                'token' => $token->plainTextToken,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name
+                ],
             ]);
         }
         return response()->json([

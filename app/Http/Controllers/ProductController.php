@@ -18,7 +18,7 @@ class ProductController extends Controller
     public function index()
     {
         $records = Product::whereNull('deleted_at')->get();
-        if(empty($records)){
+        if($records->isEmpty()){
             return response()->json([
                 'error' => 'true',
                 'code' => Response::HTTP_BAD_REQUEST,

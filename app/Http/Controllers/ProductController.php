@@ -17,12 +17,15 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $records = Product::whereNull('deleted_at')->get();
+        $records = Product::leftJoin('categories', 'products.category_id', '=', 'categories.id')
+        ->whereNull('products.deleted_at')
+        ->select('products.*', 'categories.category_name')
+        ->get();
         if($records->isEmpty()){
             return response()->json([
                 'error' => 'true',
                 'code' => Response::HTTP_BAD_REQUEST,
-                'message' => 'Can find Record'
+                'message' => 'Records is Empty'
             ]);
         }else{
             return response()->json([
@@ -43,9 +46,9 @@ class ProductController extends Controller
             'product_name' => 'required',
             'price' => 'required',
             'category_id' => 'required',
-            'quantily' => 'required',
+            'quantity' => 'required',
             'product_description' => 'nullable',
-            'images' => 'nullable'
+            'images' => 'nullable|string',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -58,21 +61,26 @@ class ProductController extends Controller
             $product = new Product();
             $product->product_name = $params['product_name'];
             $product->price = $params['price'];
-            $product->product_description = $params['product_description'];
-            $product->images = $params['images'];
+            $product->product_description = $params['product_description'] ?? null;
+            if ($request->has('images')) {
+                $base64Image = $params['images'];
+                $imageData = base64_decode($base64Image);
+                $product->images = $imageData;
+            }
             $product->category_id = $params['category_id'];
-            $product->quantity = $params['quantily'];
+            $product->quantity = $params['quantity'];
             $product->save();
             return response()->json([
                 'error' => false,
-                'message' => 'Successfull',
+                'code' => Response::HTTP_OK,
+                'message' => 'Action completed successfully',
             ]);
         }catch(Exception $e){
             Log::info($e);
             return response()->json([
                 'error' => true,
                 'code'=> Response::HTTP_BAD_REQUEST,
-                'message' => 'Add fail',
+                'message' => 'Action failed',
             ]);
         }
     }
@@ -87,7 +95,7 @@ class ProductController extends Controller
             return response()->json([
                 'error' => true,
                 'code' => Response::HTTP_BAD_REQUEST,
-                'message' => 'Can find record'
+                'message' => 'Record is Empty'
             ]);
         }else{
             return response()->json([
@@ -128,14 +136,15 @@ class ProductController extends Controller
              $product->save();
              return response()->json([
                  'error' => false,
-                 'message' => 'Successfull',
+                 'code' => Response::HTTP_OK,
+                 'message' => 'Action completed successfully',
              ]);
          }catch(Exception $e){
              Log::info($e);
              return response()->json([
                  'error' => true,
                  'code'=> Response::HTTP_BAD_REQUEST,
-                 'message' => 'Update fail',
+                 'message' => 'Action failed',
              ]);
          }
     }
@@ -151,14 +160,15 @@ class ProductController extends Controller
             $product->save();
             return response()->json([
                 'error' => false,
-                'message' => 'Successfull',
+                'code' => Response::HTTP_OK,
+                'message' => 'Action completed successfully',
             ]);
         }catch(Exception $e){
             Log::info($e);
             return response()->json([
                 'error' => true,
                 'code'=> Response::HTTP_BAD_REQUEST,
-                'message' => 'Delete fail',
+                'message' => 'Action failed',
             ]);
         }
     }
@@ -170,7 +180,7 @@ class ProductController extends Controller
             return response()->json([
                 'error' => 'true',
                 'code' => Response::HTTP_BAD_REQUEST,
-                'message' => 'Can find Record'
+                'message' => 'Records is Empty'
             ]);
         }else{
             return response()->json([
@@ -180,4 +190,5 @@ class ProductController extends Controller
             ]);
         }   
     }
+    
 }

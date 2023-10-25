@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -23,7 +24,7 @@ class UserController extends Controller
             return response()->json([
                 'error' => 'true',
                 'code' => Response::HTTP_BAD_REQUEST,
-                'message' => 'Can find user'
+                'message' => 'Records is Empty'
             ]);
         }else{
             $roles = Role::whereNull('deleted_at')->get();
@@ -64,14 +65,14 @@ class UserController extends Controller
             $user->save();
             return response()->json([
                 'error' => false,
-                'message' => 'Successfull',
+                'message' => 'Action completed successfully',
             ]);
         }catch(Exception $e){
             Log::info($e);
             return response()->json([
                 'error' => true,
                 'code'=> Response::HTTP_BAD_REQUEST,
-                'message' => 'Add fail',
+                'message' => 'Action failed',
             ]);
         }
     }
@@ -86,7 +87,7 @@ class UserController extends Controller
             return response()->json([
                 'error' => true,
                 'code' => Response::HTTP_BAD_REQUEST,
-                'message' => 'Can find user'
+                'message' => 'Record is Empty'
             ]);
         }else{
             return response()->json([
@@ -121,14 +122,15 @@ class UserController extends Controller
              $user->save();
              return response()->json([
                  'error' => false,
-                 'message' => 'Successfull',
+                 'code' => Response::HTTP_OK,
+                 'message' => 'Action completed successfully',
              ]);
          }catch(Exception $e){
              Log::info($e);
              return response()->json([
                  'error' => true,
                  'code'=> Response::HTTP_BAD_REQUEST,
-                 'message' => 'Update fail',
+                 'message' => 'Action failed',
              ]);
          }
     }
@@ -144,14 +146,57 @@ class UserController extends Controller
              $user->save();
              return response()->json([
                  'error' => false,
-                 'message' => 'Successfull',
+                 'code' => Response::HTTP_OK,
+                 'message' => 'Action completed successfully',
              ]);
          }catch(Exception $e){
              Log::info($e);
              return response()->json([
                  'error' => true,
                  'code'=> Response::HTTP_BAD_REQUEST,
-                 'message' => 'Delete fail',
+                 'message' => 'Action failed',
+             ]);
+         }
+    }
+    
+    public function changePassword(Request $request)
+    {
+        $params = $request->input();
+        $user = $request->user();
+        $validator = Validator::make($request->input(), [
+         'old_password' => 'required',
+         'new_password' => 'required',
+         'confirm_password' => 'required',
+         ]);
+         if ($validator->fails()) {
+             return response()->json([
+                 'error' => true,
+                 'code'=> Response::HTTP_BAD_REQUEST,
+                 'mesage' => $validator->errors()
+             ]);
+         }
+         try{
+             if (!Hash::check($params['old_password'], $user->password))
+             {
+                return response()->json([
+                    'error' => true,
+                    'code' => Response::HTTP_BAD_REQUEST,
+                    'message' => 'Old password is incorrect',
+                ]);
+             }
+             $user->password = Hash::make($params['new_password']);
+             $user->save();
+             return response()->json([
+                 'error' => false,
+                 'code' => Response::HTTP_OK,
+                 'message' => 'Action completed successfully',
+             ]);
+         }catch(Exception $e){
+             Log::info($e);
+             return response()->json([
+                 'error' => true,
+                 'code'=> Response::HTTP_BAD_REQUEST,
+                 'message' => 'Action failed',
              ]);
          }
     }

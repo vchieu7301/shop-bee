@@ -23,10 +23,12 @@ Route::group(['prefix' => 'admin'], function () {
     Route::post('login', [AuthController::class, 'login'])->name('admin-login');
     Route::group(["middleware" => ["isAdmin", "auth:sanctum", "cors"]], function () {
         Route::post('sign-out', [AuthController::class, 'signOut'])->name('sign-out');
+        Route::post('change-password', [UserController::class, 'changePassword'])->name('change-password');
         Route::resource('users', UserController::class)->only('index', 'store', 'show', 'update', 'destroy');
         Route::resource('categories', CategoryController::class)->only('index', 'store', 'show', 'update', 'destroy');
         Route::resource('products', ProductController::class)->only('index', 'store', 'show', 'update', 'destroy');
         Route::resource('orders', OrderController::class)->only('index', 'store', 'show', 'update', 'destroy');
+
     });
 });
 
@@ -36,7 +38,7 @@ Route::post('register', [AuthController::class, 'register'])->name('register');
 Route::get('unauthenticated', [AuthController::class, 'unauthenticated'])->name('unauthenticated');
 Route::group(["middleware" => ["auth:sanctum", "cors"]], function () {
     Route::post('sign-out', [AuthController::class, 'signOut'])->name('sign-out');
-    Route::get('dashboard', 'ProductController@dashboardProducts')->name('dashboard');
-    Route::post('orders', 'OrderController@palceOrder')->name('place-order');
-    Route::post('cancelOrder/{id}', 'OrderController@cancelOrder')->name('cancel-order');
+    Route::get('/', [ProductController::class, 'dashboardProducts'])->name('dashboard');
+    Route::post('orders/palceOrder', [OrderController::class, 'palceOrder'])->name('place-order');
+    Route::post('cancelOrder/{id}', [OrderController::class, 'cancelOrder'])->name('cancel-order');
 });

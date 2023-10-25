@@ -23,7 +23,7 @@ class CategoryController extends Controller
             return response()->json([
                 'error' => 'true',
                 'code' => Response::HTTP_BAD_REQUEST,
-                'message' => 'Can find product'
+                'message' => 'Records is Empty'
             ]);
         }else{
             return response()->json([
@@ -58,14 +58,15 @@ class CategoryController extends Controller
             $category->save();
             return response()->json([
                 'error' => false,
-                'message' => 'Successfull',
+                'code' => Response::HTTP_OK,
+                'message' => 'Action completed successfully',
             ]);
         }catch(Exception $e){
             Log::info($e);
             return response()->json([
                 'error' => true,
                 'code'=> Response::HTTP_BAD_REQUEST,
-                'message' => 'Add fail',
+                'message' => 'Action failed',
             ]);
         }
     }
@@ -80,7 +81,7 @@ class CategoryController extends Controller
             return response()->json([
                 'error' => true,
                 'code' => Response::HTTP_BAD_REQUEST,
-                'message' => 'Can find record'
+                'message' => 'Record is Empty'
             ]);
         }else{
             return response()->json([
@@ -115,14 +116,15 @@ class CategoryController extends Controller
              $category->save();
              return response()->json([
                  'error' => false,
-                 'message' => 'Successfull',
+                 'code' => Response::HTTP_OK,
+                 'message' => 'Action completed successfully',
              ]);
          }catch(Exception $e){
              Log::info($e);
              return response()->json([
                  'error' => true,
                  'code'=> Response::HTTP_BAD_REQUEST,
-                 'message' => 'Update fail',
+                 'message' => 'Action failed',
              ]);
          }
     }
@@ -146,7 +148,8 @@ class CategoryController extends Controller
                 $category->save();
                 return response()->json([
                     'error' => false,
-                    'message' => 'Successfull',
+                    'code' => Response::HTTP_OK,
+                    'message' => 'Action completed successfully',
                 ]);
             }
         }catch(Exception $e){
@@ -154,7 +157,7 @@ class CategoryController extends Controller
             return response()->json([
                 'error' => true,
                 'code'=> Response::HTTP_BAD_REQUEST,
-                'message' => 'Delete fail',
+                'message' => 'Action failed',
             ]);
         }
     }

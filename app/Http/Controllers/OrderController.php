@@ -25,13 +25,16 @@ class OrderController extends Controller
             return response()->json([
                 'error' => 'true',
                 'code' => Response::HTTP_BAD_REQUEST,
-                'message' => 'Can find Record'
+                'message' => 'Records is Empty'
             ]);
         } else {
+            $totalAmount = 0;
             foreach ($records as $record) {
                 $details = [];
                 $order_items = OrderItem::where('order_id', $record->id)->get();
+                $subtotal = 0;
                 foreach ($order_items as $item) {
+                    $subtotal += $item->subtotal;
                     $details[] = [
                         'product_id'=> $item->product_id,
                         'quantity' => $item->quantity,
@@ -44,11 +47,13 @@ class OrderController extends Controller
                     'user' => $user->name,
                     'details' => $details,
                 ];
+                $totalAmount += $subtotal;
             }
             return response()->json([
                 'error' => false,
                 'code' => Response::HTTP_OK,
                 'result' => $recordsDetails,
+                'total_amount' => $totalAmount,
             ]);
         }
     }
@@ -82,8 +87,8 @@ class OrderController extends Controller
             $order->status = $params['status'];
             $order->payment_method = $params['payment_method'];
             $order->shipping_address = $params['shipping_address'];
-            $order->coupon_code = $params['coupon_code'];
-            $order->shipping_fee = $params['shipping_fee'];
+            $order->coupon_code = $params['coupon_code'] ?? null;
+            $order->shipping_fee = $params['shipping_fee'] ?? null;
             $order->save();
             foreach ($request->order_items as $itemData) {
                 $product = Product::where('id', $itemData['product_id'])->first();
@@ -97,14 +102,15 @@ class OrderController extends Controller
             }
             return response()->json([
                 'error' => false,
-                'message' => 'Successfull',
+                'code' => Response::HTTP_OK,
+                'message' => 'Action completed successfully',
             ]);
         } catch (Exception $e) {
             Log::info($e);
             return response()->json([
                 'error' => true,
                 'code' => Response::HTTP_BAD_REQUEST,
-                'message' => 'Add fail',
+                'message' => 'Action failed',
             ]);
         }
     }
@@ -119,7 +125,7 @@ class OrderController extends Controller
             return response()->json([
                 'error' => true,
                 'code' => Response::HTTP_BAD_REQUEST,
-                'message' => 'Can find record'
+                'message' => 'Record is Empty'
             ]);
         } else {
             return response()->json([
@@ -170,7 +176,8 @@ class OrderController extends Controller
             }
             return response()->json([
                 'error' => false,
-                'message' => 'Successfull',
+                'code' => Response::HTTP_OK,
+                'message' => 'Action completed successfully',
             ]);
         } catch (Exception $e) {
             Log::info($e);
@@ -178,7 +185,7 @@ class OrderController extends Controller
             return response()->json([
                 'error' => true,
                 'code' => Response::HTTP_BAD_REQUEST,
-                'message' => 'Update fail',
+                'message' => 'Action failed',
             ]);
         }
     }
@@ -196,14 +203,14 @@ class OrderController extends Controller
             $order->save();
             return response()->json([
                 'error' => false,
-                'message' => 'Successfull',
+                'message' => 'Action completed successfully',
             ]);
         } catch (Exception $e) {
             Log::info($e);
             return response()->json([
                 'error' => true,
                 'code' => Response::HTTP_BAD_REQUEST,
-                'message' => 'Delete fail',
+                'message' => 'Action failed',
             ]);
         }
     }
@@ -248,7 +255,8 @@ class OrderController extends Controller
             }
             return response()->json([
                 'error' => false,
-                'message' => 'Successfull',
+                'code' => Response::HTTP_OK,
+                'message' => 'Action completed successfully',
             ]);
         } catch (Exception $e) {
             Log::info($e);
@@ -256,7 +264,7 @@ class OrderController extends Controller
             return response()->json([
                 'error' => true,
                 'code' => Response::HTTP_BAD_REQUEST,
-                'message' => 'Add fail',
+                'message' => 'Action failed',
             ]);
         }
     }
@@ -270,7 +278,8 @@ class OrderController extends Controller
             $order->save();
             return response()->json([
                 'error' => false,
-                'message' => 'Successfull',
+                'code' => Response::HTTP_OK,
+                'message' => 'Action completed successfully',
             ]);
         } catch (Exception $e) {
             Log::info($e);

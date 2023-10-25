@@ -37,14 +37,15 @@ class AuthController extends Controller
             $user->save();
             return response()->json([
                 'error' => false,
-                'message' => 'Successfull',
+                'code' => Response::HTTP_OK,
+                'message' => 'Action completed successfully',
             ]);
         }catch(Exception $e){
             Log::info($e);
             return response()->json([
                 'error' => true,
                 'code'=> Response::HTTP_BAD_REQUEST,
-                'message' => 'Add user fail',
+                'message' => 'Action failed',
             ]);
         }
     }

@@ -54,7 +54,7 @@ class CategoryController extends Controller
         try{
             $category = new Category();
             $category->category_name = $params['category_name'];
-            $category->description = $params['description'];
+            $category->description = $params['description']?? null;
             $category->save();
             return response()->json([
                 'error' => false,
@@ -112,7 +112,7 @@ class CategoryController extends Controller
          try{
              $category = Category::where('id', $id)->whereNull('deleted_at')->first();
              $category->category_name = $params['category_name'];
-             $category->description = $params['description'];
+             $category->description = $params['description']?? null;
              $category->save();
              return response()->json([
                  'error' => false,

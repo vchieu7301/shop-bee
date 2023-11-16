@@ -36,9 +36,10 @@ Route::group(['prefix' => 'admin'], function () {
 Route::post('login', [AuthController::class, 'login'])->name('login');
 Route::post('register', [AuthController::class, 'register'])->name('register');
 Route::get('unauthenticated', [AuthController::class, 'unauthenticated'])->name('unauthenticated');
+Route::get('dashboard', [ProductController::class, 'dashboardProducts'])->name('dashboard');
+Route::get('display-product/{id}', [ProductController::class, 'displayProduct'])->name('display-product');
 Route::group(["middleware" => ["auth:sanctum", "cors"]], function () {
     Route::post('sign-out', [AuthController::class, 'signOut'])->name('sign-out');
-    Route::get('/', [ProductController::class, 'dashboardProducts'])->name('dashboard');
-    Route::post('orders/palceOrder', [OrderController::class, 'palceOrder'])->name('place-order');
+    Route::post('orders/palce-order', [OrderController::class, 'palceOrder'])->name('place-order');
     Route::post('cancelOrder/{id}', [OrderController::class, 'cancelOrder'])->name('cancel-order');
 });

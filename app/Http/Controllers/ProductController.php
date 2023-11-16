@@ -8,6 +8,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
@@ -65,7 +66,9 @@ class ProductController extends Controller
             if ($request->has('images')) {
                 $base64Image = $params['images'];
                 $imageData = base64_decode($base64Image);
-                $product->images = $imageData;
+                $imageFileName = time() . '_' . uniqid() . '.jpg';
+                Storage::disk('public')->put('images/' . $imageFileName, $imageData);
+                $product->images = $imageFileName;
             }
             $product->category_id = $params['category_id'];
             $product->quantity = $params['quantity'];
@@ -130,8 +133,14 @@ class ProductController extends Controller
              $product = Product::where('id', $id)->whereNull('deleted_at')->first();
              $product->product_name = $params['product_name'];
              $product->price = $params['price'];
-             $product->product_description = $params['product_description'];
-             $product->images = $params['images'];
+             $product->product_description = $params['product_description']?? null;
+             if ($request->has('images')) {
+                $base64Image = $params['images'];
+                $imageData = base64_decode($base64Image);
+                $imageFileName = time() . '_' . uniqid() . '.jpg';
+                Storage::disk('public')->put('images/' . $imageFileName, $imageData);
+                $product->images = $imageFileName;
+            }
              $product->category_id = $params['category_id'];
              $product->save();
              return response()->json([
@@ -190,5 +199,27 @@ class ProductController extends Controller
             ]);
         }   
     }
-    
+
+    public function displayProduct(string $id)
+    {
+        $records = Product::where('products.id', $id)
+        ->where('products.quantity', '>', 0)
+        ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
+        ->whereNull('products.deleted_at')
+        ->select('products.*', 'categories.category_name')
+        ->first();
+        if(empty($records)){
+            return response()->json([
+                'error' => 'true',
+                'code' => Response::HTTP_BAD_REQUEST,
+                'message' => 'Records is Empty'
+            ]);
+        }else{
+            return response()->json([
+                'error' => 'false',
+                'code' => Response::HTTP_OK,
+                'result' => $records
+            ]);
+        }   
+    }
 }

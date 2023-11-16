@@ -19,7 +19,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $records = User::leftJoin('roles', 'users.role_id', '=', 'roles.role_id')->whereNull('users.deleted_at')->select('users.*', 'roles.role_name')->get();
+        $records = $records = User::where('role_id', 2)->whereNull('deleted_at')->get();
         if($records->isEmpty()){
             return response()->json([
                 'error' => 'true',

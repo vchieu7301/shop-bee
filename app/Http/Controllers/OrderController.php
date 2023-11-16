@@ -35,8 +35,10 @@ class OrderController extends Controller
                 $subtotal = 0;
                 foreach ($order_items as $item) {
                     $subtotal += $item->subtotal;
+                    $product_name = Product::where('id', $item->product_id)->first('product_name');
                     $details[] = [
                         'product_id'=> $item->product_id,
+                        'product_name' => $product_name,
                         'quantity' => $item->quantity,
                         'subtotal' => $item->subtotal,
                     ];
@@ -162,8 +164,8 @@ class OrderController extends Controller
             $order->status = $params['status'];
             $order->payment_method = $params['payment_method'];
             $order->shipping_address = $params['shipping_address'];
-            $order->coupon_code = $params['coupon_code'];
-            $order->shipping_fee = $params['shipping_fee'];
+            $order->coupon_code = $params['coupon_code']?? null;
+            $order->shipping_fee = $params['shipping_fee']?? null;
             $order->save();
             foreach ($request->order_items as $itemData) {
                 $product = Product::where('id', $itemData['product_id'])->first();
@@ -220,6 +222,7 @@ class OrderController extends Controller
         $user_id = $request->user()->id;
         $params = $request->input();
         $validator = Validator::make($request->input(), [
+            'status' => 'required',
             'payment_method' => 'required',
             'shipping_address' => 'required',
             'coupon_code' => 'nullable',
@@ -237,11 +240,11 @@ class OrderController extends Controller
             $order = new Order();
             $order->user_id = $user_id;
             $order->order_date = Carbon::now();
-            $order->status = 'Pending Confirmation';
+            $order->status = $params['status'];
             $order->payment_method = $params['payment_method'];
             $order->shipping_address = $params['shipping_address'];
-            $order->coupon_code = $params['coupon_code'];
-            $order->shipping_fee = $params['shipping_fee'];
+            $order->coupon_code = $params['coupon_code']?? null;
+            $order->shipping_fee = $params['shipping_fee']?? null;
             $order->save();
             foreach ($request->order_items as $itemData) {
                 $product = Product::where('id', $itemData['product_id'])->first();
@@ -260,7 +263,6 @@ class OrderController extends Controller
             ]);
         } catch (Exception $e) {
             Log::info($e);
-            print_r($e->getMessage());
             return response()->json([
                 'error' => true,
                 'code' => Response::HTTP_BAD_REQUEST,

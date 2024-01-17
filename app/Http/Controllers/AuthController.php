@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\PassportService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Laravel\Passport\PassportServiceProvider;
 
 class AuthController extends Controller
 {
@@ -51,30 +52,45 @@ class AuthController extends Controller
             ]);
         }
     }
+
+    // public function login(Request $request){
+    //     $credentials = $request->validate([
+    //         'email' => ['required', 'email'],
+    //         'password' => ['required'],
+    //     ]);
+
+    //     if (Auth::attempt($credentials)) {
+    //         $user = $request->user();
+    //         $tokenName = 'Personal Access Token';
+    //         $token = $request->user()->createToken($tokenName);
+    //         return response()->json([
+    //             'token' => $token->plainTextToken,
+    //             'user' => [
+    //                 'id' => $user->id,
+    //                 'name' => $user->name
+    //             ],
+    //         ]);
+    //     }
+    //     return response()->json([
+    //         'error' => true,
+    //         'code' => Response::HTTP_UNAUTHORIZED,
+    //         'mesage' => 'Invalid client'
+    //     ]);
+    // }
     
     public function login(Request $request){
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
-
-        if (Auth::attempt($credentials)) {
-            $user = $request->user();
-            $tokenName = 'Personal Access Token';
-            $token = $request->user()->createToken($tokenName);
+        $passportService = app(PassportService::class);
+        $username = $request->input('username');
+        $password = $request->input('password');
+        if (empty($username) || empty($password)) {
             return response()->json([
-                'token' => $token->plainTextToken,
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name
-                ],
+                'error' => true,
+                'code' => Response::HTTP_UNAUTHORIZED,
+                'mesage' => 'Username and password are required'
             ]);
         }
-        return response()->json([
-            'error' => true,
-            'code' => Response::HTTP_UNAUTHORIZED,
-            'mesage' => 'Invalid client'
-        ]);
+        $response = $passportService->authenticate($username, $password);
+        return response()->json($response);
     }
 
     public function unauthenticated ()

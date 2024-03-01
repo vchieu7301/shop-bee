@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Route;
 //Admin
 Route::group(['prefix' => 'admin'], function () {
     Route::post('login', [AuthController::class, 'login'])->name('admin-login');
-    Route::group(["middleware" => ["isAdmin", "auth:sanctum", "cors"]], function () {
+    Route::group(["middleware" => ["isAdmin", "auth:api", "cors"]], function () {
         Route::post('sign-out', [AuthController::class, 'signOut'])->name('sign-out');
         Route::post('change-password', [UserController::class, 'changePassword'])->name('change-password');
         Route::resource('users', UserController::class)->only('index', 'store', 'show', 'update', 'destroy');
@@ -38,7 +38,7 @@ Route::post('register', [AuthController::class, 'register'])->name('register');
 Route::get('unauthenticated', [AuthController::class, 'unauthenticated'])->name('unauthenticated');
 Route::get('dashboard', [ProductController::class, 'dashboardProducts'])->name('dashboard');
 Route::get('display-product/{id}', [ProductController::class, 'displayProduct'])->name('display-product');
-Route::group(["middleware" => ["auth:sanctum", "cors"]], function () {
+Route::group(["middleware" => ["auth:api", "cors"]], function () {
     Route::post('sign-out', [AuthController::class, 'signOut'])->name('sign-out');
     Route::post('orders/palce-order', [OrderController::class, 'palceOrder'])->name('place-order');
     Route::post('cancelOrder/{id}', [OrderController::class, 'cancelOrder'])->name('cancel-order');
